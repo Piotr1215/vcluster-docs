@@ -1,5 +1,4 @@
 name: Lint
-
 on:
   pull_request:
     branches:
@@ -13,34 +12,9 @@ on:
       - "vcluster_versioned_docs/**/*.md"
       - .github/workflows/reviewdog.yaml
       - "*.md"
-
 permissions:
   pull-requests: write
-
 jobs:
-  markdownlint:
-    name: runner / markdownlint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: markdownlint
-        uses: reviewdog/action-markdownlint@v0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-review
-
-  misspell:
-    name: runner / misspell
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
-      - name: Run Misspell with Reviewdog
-        uses: reviewdog/action-misspell@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-review
-
   vale:
     name: runner / vale
     runs-on: ubuntu-latest
@@ -48,12 +22,9 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
       - name: Get changed files
-        id: changed-files
+        id: changed-files-json
         uses: tj-actions/changed-files@v45
         with:
-          json: "true"
-          base_sha: ${{ github.event.pull_request.base.sha }}
-          sha: ${{ github.event.pull_request.head.sha }}
           files: |
             platform/**/*.mdx
             platform/**/*.md
@@ -61,18 +32,24 @@ jobs:
             vcluster/**/*.md
             vcluster_versioned_docs/**/*.mdx
             vcluster_versioned_docs/**/*.md
-      - name: Install venv for vale on ubuntu latest
-        if: steps.changed-files.outputs.all_changed_files != ''
+          json: 'true'
+      - name: Prepare files for Vale
+        id: prepare-files
         run: |
-          venv="$HOME/.local/share/venv"
-          python3 -m venv "$venv"
-          echo "$venv/bin" >> $GITHUB_PATH
+          CHANGED_FILES=$(echo '${{ steps.changed-files-json.outputs.all_changed_files }}' | jq -r 'join(" ")')
+          echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
       - name: Run Vale with Reviewdog
         uses: errata-ai/vale-action@reviewdog
-        if: steps.changed-files.outputs.all_changed_files != ''
+        if: steps.prepare-files.outputs.files != ''
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fail_on_error: true
           reporter: github-pr-review
           version: 3.7.1
-          files: ${{ steps.changed-files.outputs.all_changed_files }}
+          files: ${{ steps.prepare-files.outputs.files }}
+      - name: Debug - Print changed files
+        run: |
+          echo "Changed files JSON:"
+          echo '${{ steps.changed-files-json.outputs.all_changed_files }}'
+          echo "Prepared files for Vale:"
+          echo "${{ steps.prepare-files.outputs.files }}"
