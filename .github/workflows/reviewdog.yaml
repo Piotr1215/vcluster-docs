@@ -36,7 +36,7 @@ jobs:
       - name: Prepare files for Vale
         id: prepare-files
         run: |
-          CHANGED_FILES=$(echo '${{ steps.changed-files-json.outputs.all_changed_files }}' | jq -r 'join(" ")')
+          CHANGED_FILES=$(echo '${{ steps.changed-files-json.outputs.all_changed_files }}' | jq -r '. | join(" ")')
           echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
       - name: Run Vale with Reviewdog
         uses: errata-ai/vale-action@reviewdog
