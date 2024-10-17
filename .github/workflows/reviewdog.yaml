@@ -44,10 +44,13 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
+      - name: Debug - List all files in platform directory
+        run: find platform -type f
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v45
         with:
+          since_last_remote_commit: true
           files: |
             platform/**/*.mdx
             platform/**/*.md
@@ -55,6 +58,10 @@ jobs:
             vcluster/**/*.md
             vcluster_versioned_docs/**/*.mdx
             vcluster_versioned_docs/**/*.md
+      - name: Debug - Print changed files output
+        run: |
+          echo "All changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
+          echo "Any changed: ${{ steps.changed-files.outputs.any_changed }}"
       - name: Install venv for vale on ubuntu latest
         if: steps.changed-files.outputs.all_changed_files != ''
         run: |
