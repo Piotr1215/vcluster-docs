@@ -38,8 +38,8 @@ jobs:
         if: steps.changed-files.outputs.all_changed_files != ''
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          fail_on_error: false
-          reporter: github-pr-review
+          fail_on_error: true
+          reporter: github-pr-check
           version: 3.7.1
           files: ${{ steps.changed-files.outputs.all_changed_files }}
           separator: ","
