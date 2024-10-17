@@ -43,6 +43,7 @@ jobs:
           version: 3.7.1
           files: ${{ steps.changed-files.outputs.all_changed_files }}
           separator: ","
+          filter_mode: file
       - name: Debug - Print changed files
         run: |
           echo "Changed files (comma-separated):"
